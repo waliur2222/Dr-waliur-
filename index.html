@@ -2,601 +2,421 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Neon Battle Royale</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bite Into Happiness - Best Burgers in Town</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-        }
-
-        body {
-            font-family: 'Courier New', monospace;
-            background: radial-gradient(circle at center, #0a0a1a 0%, #000 70%);
-            color: #00ff88;
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        #gameContainer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        #canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #001122 0%, #000011 50%, #000022 100%);
-            touch-action: none;
-        }
-
-        /* Screen Styles */
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s ease;
-            z-index: 100;
-        }
-
-        .screen.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .screen h1 {
-            font-size: clamp(2rem, 8vw, 4rem);
-            margin-bottom: 2rem;
-            text-shadow: 0 0 20px #00ff88;
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from { text-shadow: 0 0 20px #00ff88; }
-            to { text-shadow: 0 0 40px #00ff88, 0 0 60px #00ff88; }
-        }
-
-        .input-group {
-            margin-bottom: 2rem;
-        }
-
-        input {
-            background: rgba(0, 255, 136, 0.1);
-            border: 2px solid #00ff88;
-            border-radius: 10px;
-            padding: 1rem 1.5rem;
-            font-size: 1.2rem;
-            color: #00ff88;
-            text-align: center;
-            width: 80%;
-            max-width: 300px;
-            backdrop-filter: blur(10px);
-        }
-
-        input::placeholder {
-            color: #44ffaa;
-        }
-
-        .btn {
-            background: linear-gradient(45deg, #00ff88, #00cc66);
-            border: none;
-            border-radius: 15px;
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #000;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-            transition: all 0.2s ease;
-            min-width: 200px;
-            touch-action: manipulation;
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
-        }
-
-        /* Game UI */
-        #gameUI {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 50;
-        }
-
-        .hud {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 1rem;
-            border-radius: 10px;
-            border: 1px solid #00ff88;
-            backdrop-filter: blur(10px);
-            font-size: 1rem;
-        }
-
-        #healthBar {
-            top: 20px;
-            left: 20px;
-        }
-
-        #stats {
-            top: 20px;
-            right: 20px;
-        }
-
-        #crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-
-        .crosshair-line {
-            position: absolute;
-            background: #00ff88;
-            opacity: 0.6;
-        }
-
-        .crosshair-line.horizontal {
-            width: 20px;
-            height: 2px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .crosshair-line.vertical {
-            width: 2px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        /* Controls */
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            display: grid;
-            grid-template-areas: 
-                ". up . shoot"
-                "left down right shoot";
-            grid-gap: 15px;
-            pointer-events: auto;
-            z-index: 75;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .control-btn {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 3px solid #00ff88;
-            background: rgba(0, 255, 136, 0.15);
-            color: #00ff88;
-            font-weight: bold;
-            font-size: 1.1rem;
-            backdrop-filter: blur(10px);
-            transition: all 0.1s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .control-btn:active {
-            background: rgba(0, 255, 136, 0.4);
-            transform: scale(0.9);
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
-        }
-
-        #up { grid-area: up; }
-        #down { grid-area: down; }
-        #left { grid-area: left; }
-        #right { grid-area: right; }
-        #shoot { 
-            grid-area: shoot; 
-            background: linear-gradient(45deg, #ff0088, #cc0066);
-            border-color: #ff0088;
-            color: #fff;
-            font-size: 1.3rem;
-        }
-
-        #shoot:active {
-            background: linear-gradient(45deg, #ff4488, #ee2277);
-        }
-
-        /* Progress Bar */
-        #progressBar {
-            width: 80%;
-            height: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 5px;
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-
-        #progressFill {
-            height: 100%;
-            background: linear-gradient(90deg, #00ff88, #44ffaa);
-            width: 0%;
-            transition: width 0.1s ease;
-            box-shadow: 0 0 10px #00ff88;
-        }
-
-        @media (max-width: 480px) {
-            .control-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 1rem;
-            }
-        }
+        .hero-bg { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover; }
+        .burger-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .burger-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .cart-count { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
     </style>
 </head>
-<body>
-    <div id="gameContainer">
-        <!-- Loading Screen -->
-        <div id="loadingScreen" class="screen active">
-            <h1>NEON BATTLE</h1>
-            <div id="progressBar">
-                <div id="progressFill"></div>
-            </div>
-            <p>Loading...</p>
-        </div>
+<body class="bg-gray-50 font-sans">
 
-        <!-- Lobby Screen -->
-        <div id="lobbyScreen" class="screen">
-            <h1>BATTLE ROYALE</h1>
-            <div class="input-group">
-                <input type="text" id="playerName" placeholder="Enter your name" maxlength="12">
+<!-- Navigation -->
+<nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <i class="fas fa-hamburger text-3xl text-orange-500 mr-3"></i>
+                <h1 class="text-2xl font-bold text-gray-900">Burger Haven</h1>
             </div>
-            <button class="btn" id="startBtn">START BATTLE</button>
-        </div>
-
-        <!-- Game Canvas -->
-        <canvas id="canvas"></canvas>
-
-        <!-- Game UI Overlay -->
-        <div id="gameUI">
-            <div id="healthBar" class="hud">
-                <div>HEALTH</div>
-                <div style="width: 100px; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 5px;">
-                    <div id="healthFill" style="height: 100%; background: linear-gradient(90deg, #ff4444, #ff8888); width: 100%; transition: width 0.3s ease; border-radius: 4px;"></div>
-                </div>
-                <div id="healthText" style="margin-top: 5px;">100/100</div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#home" class="text-gray-700 hover:text-orange-500 font-medium">Home</a>
+                <a href="#menu" class="text-gray-700 hover:text-orange-500 font-medium">Menu</a>
+                <a href="#about" class="text-gray-700 hover:text-orange-500 font-medium">About</a>
+                <a href="#order" class="text-gray-700 hover:text-orange-500 font-medium">Order</a>
+                <a href="#reviews" class="text-gray-700 hover:text-orange-500 font-medium">Reviews</a>
+                <a href="#contact" class="text-gray-700 hover:text-orange-500 font-medium">Contact</a>
             </div>
-            <div id="stats" class="hud">
-                <div id="killCounter">Kills: 0</div>
-                <div id="timer">Time: 0s</div>
+            <div class="flex items-center space-x-4">
+                <button id="cartBtn" class="relative p-2 text-gray-700 hover:text-orange-500">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span id="cartCount" class="cart-count hidden">0</span>
+                </button>
+                <button class="md:hidden p-2">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
             </div>
-            <div id="crosshair">
-                <div class="crosshair-line horizontal"></div>
-                <div class="crosshair-line vertical"></div>
-            </div>
-        </div>
-
-        <!-- Controls -->
-        <div id="controls">
-            <button id="up" class="control-btn">↑</button>
-            <button id="down" class="control-btn">↓</button>
-            <button id="left" class="control-btn">←</button>
-            <button id="right" class="control-btn">→</button>
-            <button id="shoot" class="control-btn">SHOOT</button>
-        </div>
-
-        <!-- Game Over Screen -->
-        <div id="gameOverScreen" class="screen">
-            <h1>GAME OVER</h1>
-            <div style="background: rgba(0,0,0,0.8); padding: 2rem; border-radius: 15px; border: 2px solid #ff4444; margin-bottom: 2rem; text-align: center;">
-                <div id="finalScore" style="font-size: 1.5rem; margin-bottom: 1rem;">Score: 0</div>
-                <div id="finalKills" style="font-size: 1.2rem; margin-bottom: 1rem;">Kills: 0</div>
-                <div id="finalTime" style="font-size: 1.2rem;">Time: 0s</div>
-            </div>
-            <button class="btn" id="restartBtn" style="margin-right: 1rem;">RESTART</button>
-            <button class="btn" id="lobbyBtn" style="background: linear-gradient(45deg, #ff8844, #ff6644);">LOBBY</button>
         </div>
     </div>
+</nav>
 
-    <script>
-        // ==================== GAME STATE ====================
-        const gameState = {
-            currentScreen: 'loading',
-            playerName: 'Player',
-            gameRunning: false,
-            gameTime: 0,
-            kills: 0,
-            score: 0,
-            lastUpdate: 0,
-            fadeTransition: false,
-            fadeProgress: 0
-        };
+<!-- 1. Homepage -->
+<section id="home" class="hero-bg text-white min-h-screen flex items-center justify-center text-center px-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-black mb-6 animate-pulse">Bite Into Happiness</h1>
+        <p class="text-xl md:text-2xl mb-12 font-light">Fresh ingredients. Juicy patties. Unforgettable flavors.</p>
+        <div class="space-x-4">
+            <a href="#order" class="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-full text-lg font-bold inline-block transition-all duration-300 transform hover:scale-105">Order Now</a>
+            <a href="#menu" class="border-2 border-white hover:bg-white hover:text-gray-900 text-white px-10 py-4 rounded-full text-lg font-bold inline-block transition-all duration-300">View Menu</a>
+        </div>
+        <!-- Quick Highlights -->
+        <div class="mt-20 grid md:grid-cols-3 gap-8 text-left">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-leaf text-3xl text-green-400"></i>
+                <div>
+                    <h3 class="text-xl font-bold">Fresh Ingredients</h3>
+                    <p class="text-lg">Sourced daily from local farms</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-motorcycle text-3xl text-blue-400"></i>
+                <div>
+                    <h3 class="text-xl font-bold">Fast Delivery</h3>
+                    <p class="text-lg">Hot & fresh in 30 minutes</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-star text-3xl text-yellow-400"></i>
+                <div>
+                    <h3 class="text-xl font-bold">Signature Burgers</h3>
+                    <p class="text-lg">Crafted with love & passion</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-        // ==================== CANVAS SETUP ====================
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+<!-- 2. Menu Page -->
+<section id="menu" class="py-20 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="text-center mb-20">
+            <h2 class="text-5xl font-black text-gray-900 mb-4">Our Menu</h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">From classic to gourmet, find your perfect burger</p>
+        </div>
         
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        <!-- Menu Categories -->
+        <div class="space-y-16">
+            <!-- Classic Burgers -->
+            <div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                    <i class="fas fa-fire text-orange-500 mr-4"></i> Classic Burgers
+                </h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="burger-card bg-white rounded-2xl p-6 shadow-lg border">
+                        <img src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop" alt="Classic Cheeseburger" class="w-full h-48 object-cover rounded-xl mb-4">
+                        <h4 class="text-2xl font-bold mb-2">Classic Cheeseburger</h4>
+                        <p class="text-gray-600 mb-4">Juicy beef patty, cheddar cheese, lettuce, tomato, pickles, special sauce</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-3xl font-bold text-orange-500">$12.99</span>
+                            <button class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold add-to-cart" data-name="Classic Cheeseburger" data-price="12.99">
+                                <i class="fas fa-plus mr-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Add more menu items similarly -->
+                </div>
+            </div>
 
-        // ==================== PLAYER SYSTEM ====================
-        const player = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            vx: 0,
-            vy: 0,
-            radius: 20,
-            health: 100,
-            maxHealth: 100,
-            lastShot: 0,
-            shootDirection: { x: 0, y: -1 }, // Default up
-            color: '#00ff88'
-        };
+            <!-- Premium Burgers -->
+            <div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                    <i class="fas fa-crown text-yellow-500 mr-4"></i> Premium Burgers
+                </h3>
+                <!-- Similar structure -->
+            </div>
 
-        // ==================== ENEMY SYSTEM ====================
-        const enemies = [];
-        const enemySpawnTimer = 0;
-        const BULLET_SPEED = 6;
-        const PLAYER_SPEED = 2.5;
-        const FIRE_RATE = 300;
-        const ENEMY_COUNT = 6;
-        const ENEMY_DAMAGE = 5;
-        const CHASE_DISTANCE = 150;
+            <!-- Veggie Options -->
+            <div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                    <i class="fas fa-seedling text-green-500 mr-4"></i> Veggie & Vegan
+                </h3>
+                <!-- Similar structure -->
+            </div>
+        </div>
+    </div>
+</section>
 
-        class Enemy {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.radius = 18;
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
-                this.health = 3;
-                this.lastDamage = 0;
-                this.color = `hsl(${200 + Math.random() * 60}, 70%, 50%)`;
-            }
+<!-- 3. About Us -->
+<section id="about" class="py-20 bg-gradient-to-r from-orange-50 to-yellow-50">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-5xl font-black text-gray-900 mb-8">Our Story</h2>
+        <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Founded in 2015 by burger enthusiast Mike Johnson, Burger Haven started as a small food truck. 
+            Today, we're proud to serve the best burgers in town using only the freshest ingredients and 
+            time-tested recipes passed down through generations.
+        </p>
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <img src="https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?w=600&h=400&fit=crop" alt="Our Kitchen" class="rounded-2xl shadow-2xl">
+            </div>
+            <div class="text-left">
+                <h3 class="text-3xl font-bold text-gray-900 mb-6">Why Choose Us?</h3>
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <i class="fas fa-check-circle text-2xl text-green-500 mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-xl">100% Fresh Beef</h4>
+                            <p>Never frozen, ground daily</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <i class="fas fa-check-circle text-2xl text-green-500 mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-xl">Handmade Buns</h4>
+                            <p>Baked fresh every morning</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-            update(deltaTime) {
-                const dx = player.x - this.x;
-                const dy = player.y - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+<!-- 4. Order Online -->
+<section id="order" class="py-20 bg-white">
+    <div class="max-w-4xl mx-auto px-4">
+        <h2 class="text-5xl font-black text-gray-900 text-center mb-12">Order Online</h2>
+        <div class="grid md:grid-cols-2 gap-12">
+            <div>
+                <h3 class="text-3xl font-bold mb-8">Fast Delivery in 30 Minutes</h3>
+                <div class="space-y-6">
+                    <div class="flex items-center p-4 bg-orange-50 rounded-xl">
+                        <i class="fas fa-map-marker-alt text-2xl text-orange-500 mr-4"></i>
+                        <div>
+                            <h4 class="font-bold">Enter Your Location</h4>
+                            <input type="text" placeholder="Street address, City" class="w-full p-3 border rounded-lg mt-2">
+                        </div>
+                    </div>
+                    <button class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold text-xl">Find Restaurants</button>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-12 rounded-3xl text-center">
+                <i class="fas fa-motorcycle text-6xl mb-6 block mx-auto"></i>
+                <h3 class="text-3xl font-bold mb-4">Special Offers</h3>
+                <div class="space-y-4 mb-8">
+                    <div class="bg-white bg-opacity-20 p-4 rounded-xl">🍔 Buy 1 Classic, Get 1 Fries 50% OFF</div>
+                    <div class="bg-white bg-opacity-20 p-4 rounded-xl">🥤 Free Drink with Any Premium Burger</div>
+                </div>
+                <button class="w-full bg-white text-orange-500 py-4 rounded-xl font-bold text-xl hover:bg-gray-100">View All Deals</button>
+            </div>
+        </div>
+    </div>
+</section>
 
-                if (dist < CHASE_DISTANCE) {
-                    // Chase player
-                    const speed = 1.5;
-                    this.vx = (dx / dist) * speed;
-                    this.vy = (dy / dist) * speed;
-                } else {
-                    // Random movement
-                    this.vx += (Math.random() - 0.5) * 0.5;
-                    this.vy += (Math.random() - 0.5) * 0.5;
-                    this.vx *= 0.95;
-                    this.vy *= 0.95;
-                }
+<!-- 5. Gallery -->
+<section id="gallery" class="py-20 bg-gray-100">
+    <div class="max-w-6xl mx-auto px-4">
+        <h2 class="text-5xl font-black text-gray-900 text-center mb-16">Gallery</h2>
+        <div class="grid md:grid-cols-3 gap-6">
+            <img src="https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400&h=500&fit=crop" alt="Burger" class="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
+            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=500&fit=crop" alt="Fries" class="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
+            <img src="https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?w=400&h=500&fit=crop" alt="Restaurant" class="rounded-2xl shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer">
+        </div>
+    </div>
+</section>
 
-                // Boundary collision
-                this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x + this.vx));
-                this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y + this.vy));
+<!-- 6. Customer Reviews -->
+<section id="reviews" class="py-20 bg-white">
+    <div class="max-w-4xl mx-auto px-4">
+        <h2 class="text-5xl font-black text-gray-900 text-center mb-16">What Our Customers Say</h2>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-gray-50 p-8 rounded-2xl text-center">
+                <div class="flex justify-center mb-4">
+                    <i class="fas fa-star text-yellow-400"></i>
+                    <i class="fas fa-star text-yellow-400"></i>
+                    <i class="fas fa-star text-yellow-400"></i>
+                    <i class="fas fa-star text-yellow-400"></i>
+                    <i class="fas fa-star text-yellow-400"></i>
+                </div>
+                <p class="text-gray-700 mb-6 italic">"Best burger I've ever had! The patty was so juicy and perfectly cooked."</p>
+                <h4 class="font-bold text-xl">Sarah Johnson</h4>
+            </div>
+            <!-- Add more reviews -->
+        </div>
+    </div>
+</section>
 
-                // Damage player if touching
-                if (dist < player.radius + this.radius && Date.now() - this.lastDamage > 1000) {
-                    player.health -= ENEMY_DAMAGE;
-                    this.lastDamage = Date.now();
-                    updateHealthUI();
-                }
-            }
+<!-- 7. Contact Page -->
+<section id="contact" class="py-20 bg-gradient-to-r from-orange-50 to-yellow-50">
+    <div class="max-w-4xl mx-auto px-4">
+        <h2 class="text-5xl font-black text-gray-900 text-center mb-16">Get In Touch</h2>
+        <div class="grid md:grid-cols-2 gap-12">
+            <div>
+                <h3 class="text-3xl font-bold mb-8">Contact Info</h3>
+                <div class="space-y-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-phone text-2xl text-orange-500 mr-4"></i>
+                        <div>
+                            <h4 class="font-bold">Call Us</h4>
+                            <p>+1 (555) 123-4567</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-envelope text-2xl text-orange-500 mr-4"></i>
+                        <div>
+                            <h4 class="font-bold">Email</h4>
+                            <p>hello@burgerhaven.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <form class="space-y-6">
+                <div>
+                    <input type="text" placeholder="Your Name" class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                </div>
+                <div>
+                    <input type="email" placeholder="Your Email" class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                </div>
+                <div>
+                    <textarea placeholder="Your Message" rows="5" class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold text-xl">Send Message</button>
+            </form>
+        </div>
+    </div>
+</section>
 
-            takeDamage() {
-                this.health--;
-                if (this.health <= 0) {
-                    gameState.kills++;
-                    gameState.score += 100;
-                    return true; // Dead
-                }
-                return false;
-            }
-        }
+<!-- 8. Footer -->
+<footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-4 gap-8">
+        <div>
+            <div class="flex items-center mb-6">
+                <i class="fas fa-hamburger text-3xl text-orange-500 mr-3"></i>
+                <h3 class="text-2xl font-bold">Burger Haven</h3>
+            </div>
+            <p class="text-gray-400 mb-6">Bite into happiness with every burger.</p>
+            <div class="flex space-x-4">
+                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+            </div>
+        </div>
+        <div>
+            <h4 class="font-bold text-lg mb-6">Quick Links</h4>
+            <ul class="space-y-3">
+                <li><a href="#menu" class="text-gray-400 hover:text-white">Menu</a></li>
+                <li><a href="#order" class="text-gray-400 hover:text-white">Order Online</a></li>
+                <li><a href="#contact" class="text-gray-400 hover:text-white">Contact</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4 class="font-bold text-lg mb-6">Legal</h4>
+            <ul class="space-y-3">
+                <li><a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-white">Terms of Service</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-white">Cookie Policy</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4 class="font-bold text-lg mb-6">Newsletter</h4>
+            <p class="text-gray-400 mb-4">Get updates on new burgers & offers</p>
+            <div class="flex">
+                <input type="email" placeholder="Your email" class="flex-1 px-4 py-3 bg-gray-800 border-r-0 rounded-l-xl text-white placeholder-gray-400">
+                <button class="bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-r-xl font-bold">Subscribe</button>
+            </div>
+        </div>
+    </div>
+    <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+        <p>&copy; 2024 Burger Haven. All rights reserved.</p>
+    </div>
+</footer>
 
-        // ==================== BULLET SYSTEM ====================
-        const bullets = [];
+<!-- Shopping Cart Modal -->
+<div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+        <div class="p-6 border-b">
+            <h3 class="text-2xl font-bold">Your Cart</h3>
+        </div>
+        <div id="cartItems" class="p-6"></div>
+        <div class="p-6 border-t space-y-4">
+            <div class="flex justify-between text-xl font-bold">
+                <span>Total:</span>
+                <span id="cartTotal">$0.00</span>
+            </div>
+            <button id="checkoutBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold text-lg">Checkout</button>
+        </div>
+    </div>
+</div>
 
-        class Bullet {
-            constructor(x, y, vx, vy) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx * BULLET_SPEED;
-                this.vy = vy * BULLET_SPEED;
-                this.radius = 4;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // Boundary check
-                return this.x > 0 && this.x < canvas.width && 
-                       this.y > 0 && this.y < canvas.height;
-            }
-        }
-
-        // ==================== INPUT SYSTEM ====================
-        const keys = {
-            up: false, down: false, left: false, right: false, shoot: false
-        };
-
-        // Touch controls
-        function setupControls() {
-            const controls = ['up', 'down', 'left', 'right', 'shoot'];
-            controls.forEach(id => {
-                const btn = document.getElementById(id);
-                btn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    keys[id] = true;
-                });
-                btn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    keys[id] = false;
-                });
-                // Prevent scrolling
-                btn.addEventListener('touchmove', (e) => e.preventDefault());
+<script>
+    // Smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
             });
-        }
+        });
+    });
 
-        // ==================== COLLISION SYSTEM ====================
-        function checkCollisions() {
-            // Bullet vs Enemy
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                const bullet = bullets[i];
-                for (let j = enemies.length - 1; j >= 0; j--) {
-                    const enemy = enemies[j];
-                    const dx = bullet.x - enemy.x;
-                    const dy = bullet.y - enemy.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < bullet.radius + enemy.radius) {
-                        if (enemy.takeDamage()) {
-                            enemies.splice(j, 1);
-                        }
-                        bullets.splice(i, 1);
-                        break;
-                    }
-                }
-            }
-        }
+    // Shopping Cart Functionality
+    let cart = [];
 
-        // ==================== UI SYSTEM ====================
-        function updateHealthUI() {
-            const healthPercent = (player.health / player.maxHealth) * 100;
-            const healthFill = document.getElementById('healthFill');
-            const healthText = document.getElementById('healthText');
+    document.querySelectorAll('.add-to-cart').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const name = this.dataset.name;
+            const price = parseFloat(this.dataset.price);
             
-            healthFill.style.width = healthPercent + '%';
-            if (healthPercent > 60) {
-                healthFill.style.background = 'linear-gradient(90deg, #44ff44, #88ff88)';
-            } else if (healthPercent > 30) {
-                healthFill.style.background = 'linear-gradient(90deg, #ffaa00, #ffcc44)';
+            const existingItem = cart.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.quantity += 1;
             } else {
-                healthFill.style.background = 'linear-gradient(90deg, #ff4444, #ff8888)';
+                cart.push({ name, price, quantity: 1 });
             }
-            healthText.textContent = `${Math.max(0, Math.floor(player.health))}/${player.maxHealth}`;
-        }
-
-        function updateStatsUI() {
-            document.getElementById('killCounter').textContent = `Kills: ${gameState.kills}`;
-            document.getElementById('timer').textContent = `Time: ${Math.floor(gameState.gameTime)}s`;
-        }
-
-        // ==================== SCREEN MANAGEMENT ====================
-        const screens = {
-            loading: document.getElementById('loadingScreen'),
-            lobby: document.getElementById('lobbyScreen'),
-            game: document.getElementById('gameUI'),
-            gameOver: document.getElementById('gameOverScreen')
-        };
-
-        function showScreen(screenName) {
-            Object.values(screens).forEach(screen => {
-                screen.classList.remove('active');
-            });
-            screens[screenName].classList.add('active');
-            gameState.currentScreen = screenName;
-        }
-
-        // ==================== RENDERING SYSTEM ====================
-        function render() {
-            // Clear canvas with trail effect
-            ctx.fillStyle = 'rgba(0, 0, 17, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw arena boundary
-            ctx.strokeStyle = '#00ff88';
-            ctx.lineWidth = 4;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#00ff88';
-            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
-            ctx.shadowBlur = 0;
-
-            // Player
-            ctx.save();
-            ctx.translate(player.x, player.y);
             
-            // Direction indicator
-            ctx.strokeStyle = player.shootDirection.x === 0 && player.shootDirection.y === -1 ? '#ffffff' : '#ffffff66';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, -player.radius);
-            ctx.lineTo(0, -player.radius - 15);
-            ctx.stroke();
+            updateCartUI();
+            this.textContent = 'Added!';
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-plus mr-2"></i>Add to Cart';
+            }, 1000);
+        });
+    });
 
-            // Player body with glow
-            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, player.radius);
-            gradient.addColorStop(0, player.color);
-            gradient.addColorStop(0.7, player.color + '88');
-            gradient.addColorStop(1, 'transparent');
+    function updateCartUI() {
+        const cartCount = document.getElementById('cartCount');
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        
+        if (totalItems > 0) {
+            cartCount.textContent = totalItems;
+            cartCount.classList.remove('hidden');
+        } else {
+            cartCount.classList.add('hidden');
+        }
+    }
+
+    // Cart Modal
+    document.getElementById('cartBtn').addEventListener('click', function() {
+        const modal = document.getElementById('cartModal');
+        const cartItems = document.getElementById('cartItems');
+        const cartTotal = document.getElementById('cartTotal');
+        
+        if (cart.length === 0) {
+            cartItems.innerHTML = '<p class="text-center text-gray-500 py-8">Your cart is empty</p>';
+        } else {
+            cartItems.innerHTML = cart.map(item => `
+                <div class="flex justify-between items-center py-4 border-b">
+                    <div>
+                        <h4 class="font-bold">${item.name}</h4>
+                        <p class="text-gray-500">$${item.price.toFixed(2)} x ${item.quantity}</p>
+                    </div>
+                    <div class="font-bold text-xl">$${(item.price * item.quantity).toFixed(2)}</div>
+                </div>
+            `).join('');
             
-            ctx.shadowBlur = 25;
-            ctx.shadowColor = player.color;
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.restore();
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotal.textContent = `$${total.toFixed(2)}`;
+        }
+        
+        modal.classList.remove('hidden');
+    });
 
-            // Bullets
-            bullets.forEach(bullet => {
-                ctx.save();
-                ctx.translate(bullet.x, bullet.y);
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#00ff88';
-                
-                const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, bullet.radius * 2);
-                glowGradient.addColorStop(0, '#00ff88');
-                glowGradient.addColorStop(0.5, '#00ff88aa');
-                glowGradient.addColorStop(1, 'transparent');
-                
-                ctx.fillStyle = glowGradient;
-                ctx.beginPath();
-                ctx.arc(0, 0, bullet.radius * 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                ctx.restore();
-            });
+    document.getElementById('cartModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+        }
+    });
 
-            // Enemies
-            enemies.forEach(enemy => {
-                ctx.save();
-                ctx.translate(enemy.x, enemy.y);
-                
-                // Health indicator
-                if (enemy.health < 3) {
-                    ctx.fillStyle = `rgba(255, 255, 255, 0.3)`;
-                    ctx.fillRect(-enemy.radius, -enemy.radius - 12, enemy.radius * 2, 4);
-                    ctx.fillStyle = '#ff4444';
-                    ctx.fillRect(-enemy.radius, -enemy.radius - 12, (enemy.health / 3) * enemy
+    document.getElementById('checkoutBtn').addEventListener('click', function() {
+        alert('Redirecting to payment... (Demo)');
+        cart = [];
+        updateCartUI();
+        document.getElementById('cartModal').classList.add('hidden');
+    });
+</script>
+
+</body>
+</html>
